@@ -503,6 +503,25 @@ files = [
 ]
 
 [[package]]
+name = "gpt4all"
+version = "2.1.0"
+description = "Python bindings for GPT4All"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "gpt4all-2.1.0-py3-none-macosx_10_15_universal2.whl", hash = "sha256:87f57db5ba12312fefbf755ff71efaab3d25a11746d594bf186d7893d65062b2"},
+    {file = "gpt4all-2.1.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:0be2c1f4c2fcb9cde1c24ffc733ef3bc45169ce050df5910d3ca3a1a9fd312c1"},
+    {file = "gpt4all-2.1.0-py3-none-win_amd64.whl", hash = "sha256:963c1a94e95e66092bf4873e381454b46465def01521aeec2d2ae1dfd6e5b9fe"},
+]
+
+[package.dependencies]
+requests = "*"
+tqdm = "*"
+
+[package.extras]
+dev = ["black", "isort", "mkautodoc", "mkdocs-jupyter", "mkdocs-material", "mkdocstrings[python]", "pytest", "setuptools", "twine", "wheel"]
+
+[[package]]
 name = "greenlet"
 version = "3.0.3"
 description = "Lightweight in-process concurrent programming"
@@ -2175,4 +2194,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10,<3.12"
-content-hash = "d51ef1716e89832a9eaf21002b45a6b44fe285daa0ac6e8402be67f8e5d3c303"
+content-hash = "7af1c24241436793e206ce1d7d50b72c4a7c1db9a73d229761048f65b1974c4a"

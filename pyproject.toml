@@ -11,6 +11,7 @@ langchain = "^0.1.1"
 langchain-community = "^0.0.13"
 unstructured = {extras = ["md"], version = "^0.12.2"}
 langchain-openai = "^0.0.3"
+gpt4all = "^2.1.0"
 
 
 [build-system]

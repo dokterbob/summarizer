@@ -7,7 +7,10 @@ from langchain_community.document_loaders.directory import DirectoryLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains import MapReduceDocumentsChain, ReduceDocumentsChain
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+
+# from langchain_openai import ChatOpenAI
+from langchain_community.llms import GPT4All
+
 
 from langchain.globals import set_verbose
 
@@ -21,7 +24,7 @@ path = args.path
 print(f"Summarizing directory {path}")
 
 loader = DirectoryLoader(
-    path=args.path, recursive=True, show_progress=True, glob="**/*.md"
+    path=args.path, recursive=True, show_progress=True, glob="**/*.txt"
 )
 docs = loader.load()
 
@@ -30,7 +33,10 @@ text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
 )
 split_docs = text_splitter.split_documents(docs)
 
-llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106")
+# llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106")
+llm = GPT4All(
+    model="/Users/drbob/Library/Application Support/nomic.ai/GPT4All/mistral-7b-instruct-v0.1.Q4_0.gguf"
+)
 
 # Map
 map_template = """Write an extensive, complete and accurate summary of the following:
