@@ -29,7 +29,7 @@ loader = DirectoryLoader(
 docs = loader.load()
 
 text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-    chunk_size=1000, chunk_overlap=0
+    chunk_size=512, chunk_overlap=32
 )
 split_docs = text_splitter.split_documents(docs)
 
