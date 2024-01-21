@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "summarybot"
+version = "0.1.0"
+description = ""
+authors = ["Mathijs de Bruin <mathijs@mathijsfietst.nl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10,<3.12"
+langchain = "^0.1.1"
+langchain-community = "^0.0.13"
+unstructured = {extras = ["md"], version = "^0.12.2"}
+langchain-openai = "^0.0.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
