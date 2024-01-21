@@ -9,6 +9,9 @@ from langchain.chains import MapReduceDocumentsChain, ReduceDocumentsChain
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
+from langchain.globals import set_verbose
+
+set_verbose(True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("path")
@@ -30,17 +33,20 @@ split_docs = text_splitter.split_documents(docs)
 llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106")
 
 # Map
-map_template = """The following is a set of documents
+map_template = """Write an extensive, complete and accurate summary of the following:
+---
 {docs}
-Based on this list of docs, please identify the main themes
+---
 Helpful Answer:"""
 map_prompt = PromptTemplate.from_template(map_template)
 map_chain = LLMChain(llm=llm, prompt=map_prompt)
 
 # Reduce
 reduce_template = """The following is set of summaries:
+---
 {docs}
-Take these and distill it into a final, consolidated summary of the main themes.
+---
+Take these and distill it into a final, consolidated, structured and complete overview.
 Helpful Answer:"""
 reduce_prompt = PromptTemplate.from_template(reduce_template)
 
@@ -70,7 +76,9 @@ map_reduce_chain = MapReduceDocumentsChain(
     # The variable name in the llm_chain to put the documents in
     document_variable_name="docs",
     # Return the results of the map steps in the output
-    return_intermediate_steps=False,
+    # return_intermediate_steps=True,
 )
 
-print(map_reduce_chain.run(split_docs))
+result = map_reduce_chain.invoke(input=split_docs)
+print("-------------- FINAL OUTPUT --------------")
+print(result.output_text)
