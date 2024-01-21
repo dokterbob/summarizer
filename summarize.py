@@ -52,7 +52,7 @@ reduce_template = """The following is set of summaries:
 ---
 {docs}
 ---
-Take these and distill it into a final, consolidated, structured and complete overview.
+Take these and distill it into a final, consolidated, complete and structured and complete Markdown document.
 Helpful Answer:"""
 reduce_prompt = PromptTemplate.from_template(reduce_template)
 
@@ -87,4 +87,4 @@ map_reduce_chain = MapReduceDocumentsChain(
 
 result = map_reduce_chain.invoke(input=split_docs)
 print("-------------- FINAL OUTPUT --------------")
-print(result.output_text)
+print(result["output_text"])
