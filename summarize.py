@@ -6,8 +6,10 @@ from langchain.chains import StuffDocumentsChain, LLMChain
 from langchain_community.document_loaders.directory import DirectoryLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains import MapReduceDocumentsChain, ReduceDocumentsChain
+from langchain_core.callbacks import StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
 from langchain_core.callbacks.stdout import StdOutCallbackHandler
+from langchain_core.runnables.config import RunnableConfig
 
 from langchain_openai import ChatOpenAI
 # from langchain_community.llms import GPT4All
@@ -25,9 +27,7 @@ args = parser.parse_args()
 path = args.path
 print(f"Summarizing directory {path}")
 
-loader = DirectoryLoader(
-    path=args.path, recursive=True, show_progress=True, glob="**/*.txt"
-)
+loader = DirectoryLoader(path=args.path, recursive=True, show_progress=True)
 docs = loader.load()
 
 text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
@@ -37,8 +37,11 @@ split_docs = text_splitter.split_documents(docs)
 
 llm = ChatOpenAI(
     temperature=0,
-    openai_api_base="http://localhost:8080/v1",
+    base_url="http://localhost:8080/v1",
     api_key="sk-no-key-required",
+    max_tokens=8192,
+    streaming=True,
+    callbacks=[StreamingStdOutCallbackHandler()],
 )
 # llm = GPT4All(
 #     model="/Users/drbob/Library/Application Support/nomic.ai/GPT4All/mistral-7b-instruct-v0.1.Q4_0.gguf",
@@ -61,11 +64,9 @@ llm = ChatOpenAI(
 
 
 # Map
-map_template = """Write an extensive, complete and accurate summary of the following:
+map_template = """<s>[INST] Write an extensive, complete and accurate summary of the following:
 ---
-{docs}
----
-Helpful Answer:"""
+{docs} [/INST]"""
 map_prompt = PromptTemplate.from_template(map_template)
 map_chain = LLMChain(
     llm=llm,
@@ -74,12 +75,11 @@ map_chain = LLMChain(
 )
 
 # Reduce
-reduce_template = """The following is set of summaries:
+reduce_template = """<s>[INST] The following is set of summaries:
 ---
 {docs}
 ---
-Take these and accurately distill it into a consolidated, complete and structured and complete summary.
-Helpful Answer:"""
+Take these and accurately distill it into a consolidated, complete and structured and complete summary. [/INST]"""
 reduce_prompt = PromptTemplate.from_template(reduce_template)
 
 # Run chain
@@ -99,7 +99,7 @@ reduce_documents_chain = ReduceDocumentsChain(
     # If documents exceed context for `StuffDocumentsChain`
     collapse_documents_chain=combine_documents_chain,
     # The maximum number of tokens to group documents into.
-    token_max=4096,  # Context window is 2048
+    token_max=2048,  # Context window is 2048
     callbacks=[StdOutCallbackHandler()],
 )
 
@@ -115,7 +115,6 @@ map_reduce_chain = MapReduceDocumentsChain(
     callbacks=[StdOutCallbackHandler()],
 )
 
-result = map_reduce_chain.invoke(input=split_docs)
+result = map_reduce_chain.invoke(input={"input_documents": split_docs})
 print("-------------- FINAL OUTPUT --------------")
 print(result["output_text"])
-print(result["intermediate_steps"])
