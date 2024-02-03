@@ -7,9 +7,11 @@ from langchain_community.document_loaders.directory import DirectoryLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains import MapReduceDocumentsChain, ReduceDocumentsChain
 from langchain_core.prompts import PromptTemplate
+from langchain_core.callbacks.stdout import StdOutCallbackHandler
 
-# from langchain_openai import ChatOpenAI
-from langchain_community.llms import GPT4All
+from langchain_openai import ChatOpenAI
+# from langchain_community.llms import GPT4All
+# from langchain_community.llms import LlamaCpp
 
 
 from langchain.globals import set_verbose
@@ -29,14 +31,34 @@ loader = DirectoryLoader(
 docs = loader.load()
 
 text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-    chunk_size=512, chunk_overlap=32
+    chunk_size=1024, chunk_overlap=32
 )
 split_docs = text_splitter.split_documents(docs)
 
-# llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106")
-llm = GPT4All(
-    model="/Users/drbob/Library/Application Support/nomic.ai/GPT4All/mistral-7b-instruct-v0.1.Q4_0.gguf"
+llm = ChatOpenAI(
+    temperature=0,
+    openai_api_base="http://localhost:8080/v1",
+    api_key="sk-no-key-required",
 )
+# llm = GPT4All(
+#     model="/Users/drbob/Library/Application Support/nomic.ai/GPT4All/mistral-7b-instruct-v0.1.Q4_0.gguf",
+#     callbacks=[StdOutCallbackHandler()],
+#     verbose=True,
+#     device="gpu",
+# )
+
+# llm = LlamaCpp(
+#     model_path="/Users/drbob/Library/Application Support/nomic.ai/GPT4All/mistral-7b-instruct-v0.1.Q4_0.gguf",
+#     temperature=0,
+#     n_gpu_layers=32,
+#     n_batch=8,
+#     n_ctx=8192,
+#     max_tokens=8192,
+#     streaming=True,
+#     callbacks=[StdOutCallbackHandler()],
+#     verbose=True,  # Verbose is required to pass to the callback manager
+# )
+
 
 # Map
 map_template = """Write an extensive, complete and accurate summary of the following:
@@ -45,7 +67,11 @@ map_template = """Write an extensive, complete and accurate summary of the follo
 ---
 Helpful Answer:"""
 map_prompt = PromptTemplate.from_template(map_template)
-map_chain = LLMChain(llm=llm, prompt=map_prompt)
+map_chain = LLMChain(
+    llm=llm,
+    prompt=map_prompt,
+    callbacks=[StdOutCallbackHandler()],
+)
 
 # Reduce
 reduce_template = """The following is set of summaries:
@@ -61,7 +87,9 @@ reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
 
 # Takes a list of documents, combines them into a single string, and passes this to an LLMChain
 combine_documents_chain = StuffDocumentsChain(
-    llm_chain=reduce_chain, document_variable_name="docs"
+    llm_chain=reduce_chain,
+    document_variable_name="docs",
+    callbacks=[StdOutCallbackHandler()],
 )
 
 # Combines and iteratively reduces the mapped documents
@@ -71,7 +99,8 @@ reduce_documents_chain = ReduceDocumentsChain(
     # If documents exceed context for `StuffDocumentsChain`
     collapse_documents_chain=combine_documents_chain,
     # The maximum number of tokens to group documents into.
-    token_max=1024,
+    token_max=4096,  # Context window is 2048
+    callbacks=[StdOutCallbackHandler()],
 )
 
 map_reduce_chain = MapReduceDocumentsChain(
@@ -83,6 +112,7 @@ map_reduce_chain = MapReduceDocumentsChain(
     document_variable_name="docs",
     # Return the results of the map steps in the output
     return_intermediate_steps=True,
+    callbacks=[StdOutCallbackHandler()],
 )
 
 result = map_reduce_chain.invoke(input=split_docs)
